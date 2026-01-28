@@ -19,36 +19,36 @@ EUR: "euros",
 export default function CrochetCalculator() {
   const [currency, setCurrency] = useState("MXN");
   const currencyName = currencyNames[currency];
-
-  const [yarnPrice, setYarnPrice] = useState<number | "">("");
-  const [totalGrams, setTotalGrams] = useState<number | "">("");
+  const [skeinPrice, setSkeinPrice] = useState<number | "">("");
+  const [gramsPerSkein, setGramsPerSkein] = useState<number | "">("");
   const [usedGrams, setUsedGrams] = useState<number | "">("");
   const [extraCosts, setExtraCosts] = useState<number | "">("");
   const [hours, setHours] = useState<number | "">("");
   const [hourPrice, setHourPrice] = useState<number | "">("");
-
   const [profitPercent, setProfitPercent] = useState<number | "">("");
+  
 
   // Valores seguros
-  const safeYarnPrice = yarnPrice || 0;
-  const safeTotalGrams = totalGrams || 0;
   const safeUsedGrams = usedGrams || 0;
+  const safeSkeinPrice = skeinPrice || 0;
+  const safeGramsPerSkein = gramsPerSkein || 0;
   const safeExtraCosts = extraCosts || 0;
   const safeHours = hours || 0;
   const safeHourPrice = hourPrice || 0;
   const safeProfitPercent = profitPercent || 0;
 
   // Cálculos
-  const materialCost =
-    safeTotalGrams > 0
-      ? (safeYarnPrice / safeTotalGrams) * safeUsedGrams + safeExtraCosts
-      : 0;
 
+  const skeinsNeeded =
+    safeGramsPerSkein > 0
+    ? Math.ceil(safeUsedGrams / safeGramsPerSkein)
+    : 0;
+  const yarnCost = skeinsNeeded * safeSkeinPrice;
+  const materialCost = yarnCost + safeExtraCosts;
   const laborCost = safeHours * safeHourPrice;
   const baseCost = materialCost + laborCost;
   const profit = baseCost * (safeProfitPercent / 100);
   const finalPrice = baseCost + profit;
-
   const symbol = currencySymbols[currency];
 
   return (
@@ -69,35 +69,48 @@ export default function CrochetCalculator() {
       <input
         type="number"
         step="0.1"
-        placeholder="Precio del estambre"
-        value={yarnPrice}
+        placeholder="Precio por madeja"
+        value={skeinPrice}
         onChange={(e) =>
-          setYarnPrice(e.target.value === "" ? "" : Number(e.target.value))
-          }
+        setSkeinPrice(e.target.value === "" ? "" : Number(e.target.value))
+        }
+        />
+
+
+        <input
+        type="number"
+        step="1"
+        placeholder="Gramos por madeja (50g, 100g, etc)"
+        value={gramsPerSkein}
+        onChange={(e) =>
+        setGramsPerSkein(e.target.value === "" ? "" : Number(e.target.value))
+        }
       />
+
 
       <input
         type="number"
         step="0.1"
-        placeholder="Gramos totales del estambre"
-        value={totalGrams}
-        onChange={(e) => setTotalGrams(e.target.value === "" ? "" : Number(e.target.value))}
-      />
-
-      <input
-        type="number"
-        step="0.1"
-        placeholder="Gramos usados"
+        placeholder="Gramos usados en el proyecto"
         value={usedGrams}
-        onChange={(e) => setUsedGrams(e.target.value === "" ? "" : Number(e.target.value))}
+        onChange={(e) =>
+        setUsedGrams(e.target.value === "" ? "" : Number(e.target.value))
+        }
       />
+      <div className="container-row">
+        <p className="result-row ">
+          <span>Madejas necesarias:</span>
+          <strong>{skeinsNeeded}</strong>
+        </p>
 
-      {usedGrams > totalGrams && (
-        <small style={{ opacity: 0.7, }}>
-          ⚠️ Los gramos usados no pueden ser mayores al total
-        </small>
-      )}
 
+        <p className="result-row">
+          <span>Costo de estambre:</span>
+          <strong>{symbol}{yarnCost.toFixed(2)} {currencyName}</strong>
+        </p>
+      </div>
+    
+    
       <input
         type="number"
         step="0.1"
@@ -146,17 +159,23 @@ export default function CrochetCalculator() {
 
       <div className="containResult">
         <h3 className="result">Resultado</h3>
-        <p>
-          Costo real: <strong style={{ paddingLeft:37 }}>{symbol}{finalPrice.toFixed(2)} {currencyName}</strong>
+        <p className="result-row">
+          <span>Costo real:</span>
+          <strong>{symbol}{baseCost.toFixed(2)} {currencyName}</strong>
         </p>
-        <p>
-          Ganancia: <strong style={{ paddingLeft:42 }}>{symbol}{finalPrice.toFixed(2)} {currencyName}</strong>
+
+
+        <p className="result-row">
+          <span>Ganancia:</span>
+          <strong>{symbol}{profit.toFixed(2)} {currencyName}</strong>
         </p>
-        <p style={{ color:"#02332f", }}>
-          Precio sugerido:{" "}
-          <strong style={{ color:"#02332f", }}>{symbol}{finalPrice.toFixed(2)} {currencyName}</strong>
+
+
+        <p className="result-row highlight">
+          <span>Precio sugerido:</span>
+          <strong>{symbol}{finalPrice.toFixed(2)} {currencyName}</strong>
         </p>
-        <small style={{ opacity: 0.7 }}>
+        <small style={{ opacity: 0.7}}>
           *El precio final lo decides tú según tu mercado y experiencia.
         </small>
       </div>
